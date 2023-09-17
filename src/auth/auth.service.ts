@@ -1,12 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common'
 import * as argon from 'argon2'
 import { PrismaService } from 'src/prisma/prisma.service'
-import { SignInDto, SignupDto } from './dto'
+import { SignInDto, SignInResponseDto, SignupDto } from './dto'
 import { Prisma } from '@prisma/client'
+import { ConfigService } from '@nestjs/config'
+import { JwtService } from '@nestjs/jwt'
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService, private jwt: JwtService, private config: ConfigService) { }
   async signup(dto: SignupDto) {
     try {
       const hash = await argon.hash(dto.password)
@@ -64,8 +66,7 @@ export class AuthService {
           error: "Forbidden"
         }
       }
-      delete user.hash
-      return user
+      return this.signToken(user.id, user.email)
     } catch (err) {
       console.log(err)
       return {
@@ -73,6 +74,20 @@ export class AuthService {
         message: "Something went wrong",
       }
 
+    }
+  }
+
+  private async signToken(userId: number, email:string): Promise<SignInResponseDto> {
+    const payload = {
+      sub: userId,
+      email,
+    }
+    const token = await this.jwt.signAsync(payload, {
+      expiresIn: '15m',
+      secret: this.config.get("JWT_SECRET")
+    })
+    return {
+      access_token: token
     }
   }
 }
