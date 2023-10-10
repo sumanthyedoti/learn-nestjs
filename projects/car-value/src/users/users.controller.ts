@@ -1,23 +1,71 @@
-import { Body, ClassSerializerInterceptor, Controller, Delete, Get, NotFoundException, Param, Patch, Post, Query, UseInterceptors } from '@nestjs/common';
-import { CreateUserDto, RemoveUserDto, UserDto } from './dtos/user.dto';
-import { UsersService } from './users.service';
-import { SerializeResponse } from 'src/interceptors/serialize.interceptor';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Session,
+  UseGuards,
+} from '@nestjs/common'
+
+import {
+  CreateUserDto,
+  RemoveUserDto,
+  SignInUserDto,
+  UserDto,
+} from './dtos/user.dto'
+import { UsersService } from './users.service'
+import { SerializeResponse } from 'src/interceptors/serialize.interceptor'
+import { AuthService } from './auth.service'
+import { CurrentUser } from './decorators/current-user.decorator'
+import { User } from './user.entity'
+import { AuthGuard } from './guards/auth.guard'
 
 @Controller('auth')
 @SerializeResponse(UserDto)
 export class UsersController {
-  constructor(private userService: UsersService) {}
+  constructor(
+    private userService: UsersService,
+    private authSerive: AuthService,
+  ) {}
 
   @Post('/signup')
-  createUser(@Body() body: CreateUserDto) {
-    return this.userService.create(body.email, body.password)
+  async signupUser(@Body() body: CreateUserDto, @Session() session: any) {
+    const user = await this.authSerive.signup(body.email, body.password)
+    session.userId = user.id
+    return user
+  }
+
+  @Post('/signin')
+  async signOutUser(@Session() session: any) {
+    session.userId = null
+  }
+
+  @Post('/signout')
+  async signinUser(
+    @Body() { email, password }: SignInUserDto,
+    @Session() session: any,
+  ) {
+    const user = await this.authSerive.signin(email, password)
+    session.userId = user.id
+    return user
+  }
+
+  @Get('/me')
+  @UseGuards(AuthGuard)
+  getMe(@CurrentUser() user: User) {
+    return user
   }
 
   @Get('/:id')
   async findUser(@Param('id') id: string) {
     const user = await this.userService.findOne(parseInt(id))
-    if(!user) {
-      throw new NotFoundException("User not found with the id")
+    if (!user) {
+      throw new NotFoundException('User not found with the id')
     }
     return user
   }
@@ -33,10 +81,13 @@ export class UsersController {
   }
 
   @Patch('/:id')
-  async updateUser(@Param('id') id: string, @Body() removeUserDto: RemoveUserDto) {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() removeUserDto: RemoveUserDto,
+  ) {
     const user = await this.userService.update(parseInt(id), removeUserDto)
-    if(!user) {
-      throw new NotFoundException("User not found with the id")
+    if (!user) {
+      throw new NotFoundException('User not found with the id')
     }
     return user
   }

@@ -1,5 +1,12 @@
-import { Exclude, Expose } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { Exclude, Expose } from 'class-transformer';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail()
@@ -10,7 +17,17 @@ export class CreateUserDto {
   @MaxLength(20)
   @IsString()
   @IsNotEmpty()
-  password: string
+  password: string;
+}
+
+export class SignInUserDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
 
 export class RemoveUserDto {
@@ -20,16 +37,16 @@ export class RemoveUserDto {
 
   @IsString()
   @IsOptional()
-  password: string
+  password: string;
 }
 
 export class UserDto {
   @Expose()
-  id: string
+  id: string;
 
   @Expose()
-  email: string
+  email: string;
 
   @Exclude()
-  password: string
+  password: string;
 }
