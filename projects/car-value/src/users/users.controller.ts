@@ -14,12 +14,12 @@ import {
 
 import {
   CreateUserDto,
-  RemoveUserDto,
+  UpdateUserDto,
   SignInUserDto,
   UserDto,
 } from './dtos/user.dto'
 import { UsersService } from './users.service'
-import { SerializeResponse } from 'src/interceptors/serialize.interceptor'
+import { SerializeResponse } from '../interceptors/serialize.interceptor'
 import { AuthService } from './auth.service'
 import { CurrentUser } from './decorators/current-user.decorator'
 import { User } from './user.entity'
@@ -41,11 +41,6 @@ export class UsersController {
   }
 
   @Post('/signin')
-  async signOutUser(@Session() session: any) {
-    session.userId = null
-  }
-
-  @Post('/signout')
   async signinUser(
     @Body() { email, password }: SignInUserDto,
     @Session() session: any,
@@ -53,6 +48,11 @@ export class UsersController {
     const user = await this.authSerive.signin(email, password)
     session.userId = user.id
     return user
+  }
+
+  @Post('/signout')
+  async signOutUser(@Session() session: any) {
+    session.userId = null
   }
 
   @Get('/me')
@@ -83,7 +83,7 @@ export class UsersController {
   @Patch('/:id')
   async updateUser(
     @Param('id') id: string,
-    @Body() removeUserDto: RemoveUserDto,
+    @Body() removeUserDto: UpdateUserDto,
   ) {
     const user = await this.userService.update(parseInt(id), removeUserDto)
     if (!user) {

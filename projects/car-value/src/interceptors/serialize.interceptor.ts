@@ -1,10 +1,15 @@
-import { CallHandler, ExecutionContext, NestInterceptor, UseInterceptors } from "@nestjs/common";
-import { plainToClass } from "class-transformer";
-import { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+import {
+  CallHandler,
+  ExecutionContext,
+  NestInterceptor,
+  UseInterceptors,
+} from '@nestjs/common'
+import { plainToClass } from 'class-transformer'
+import { Observable } from 'rxjs'
+import { map } from 'rxjs/operators'
 
 interface ClassConstructor {
-  new (...args: any[]): {};
+  new (...args: any[]): {}
 }
 export function SerializeResponse(dto: ClassConstructor) {
   return UseInterceptors(new SerializeInterceptor(dto))
@@ -13,12 +18,10 @@ export function SerializeResponse(dto: ClassConstructor) {
 export class SerializeInterceptor implements NestInterceptor {
   constructor(private dto: any) {}
   intercept(context_: ExecutionContext, handler: CallHandler): Observable<any> {
-
     return handler.handle().pipe(
       map((data: any) => {
         return plainToClass(this.dto, data)
-      })
-    );
+      }),
+    )
   }
 }
-
