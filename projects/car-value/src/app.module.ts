@@ -23,7 +23,7 @@ var cookieSession = require('cookie-session')
           type: 'sqlite',
           database: config.get<string>('DB_NAME'),
           entities: [User, Car],
-          synchronize: true,
+          synchronize: false,
         }
       },
     }),
@@ -42,11 +42,13 @@ var cookieSession = require('cookie-session')
   ],
 })
 export class AppModule {
+  constructor(private config: ConfigService) {}
+
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(
         cookieSession({
-          keys: ['key-used-to-encrypt'],
+          keys: [this.config.get('COOKIE_KEY')],
         }),
       )
       .forRoutes('*')
