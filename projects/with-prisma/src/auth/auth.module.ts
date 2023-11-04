@@ -9,5 +9,4 @@ import { JwtStrategy } from './statery/jwt.statery'
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
 })
-
 export class AuthModule {}
